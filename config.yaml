@@ -1,0 +1,60 @@
+# ============================================================
+# Unbias AI Decision — Pipeline Configuration
+# ============================================================
+# All thresholds and weights are configurable per-domain.
+# Adjust these based on your organisation's risk tolerance.
+
+# -- Protected / sensitive attributes to audit --
+sensitive_attributes:
+  - gender
+  - caste
+  - region
+
+# -- Target column (the decision the model makes) --
+target_column: approved
+
+# -- Phase 1: Data Audit --
+data_audit:
+  underrepresentation_threshold: 0.10   # Groups below 10% are flagged
+  missing_data_gap_threshold: 0.15      # >15% gap in missingness between groups = flag
+
+# -- Phase 4: Statistical Bias Detection --
+bias_detection:
+  cramers_v_threshold: 0.30             # Above 0.3 = serious red flag
+  correlation_threshold: 0.30           # Above 0.3 = investigate
+  chi_square_alpha: 0.05                # p-value significance level
+  small_sample_cutoff: 30               # Below this, use Fisher's exact test
+  fisher_cell_cutoff: 5                 # If any expected cell < 5, use Fisher's
+
+# -- Phase 6: Model-level Metrics --
+fairness_metrics:
+  demographic_parity_gap_threshold: 0.10   # 10% gap = red flag
+  disparate_impact_threshold: 0.80         # Legal 4/5ths rule
+  equalized_odds_threshold: 0.10           # 10% FPR/FNR gap = flag
+
+# -- Phase 7: Risk Scoring --
+risk_scoring:
+  weights:
+    cramers_v: 0.30
+    dp_gap: 0.30
+    imbalance_ratio: 0.15
+    missing_gap: 0.10
+    explainability_disparity: 0.10
+    label_bias: 0.05
+  thresholds:
+    low: 0.30
+    high: 0.60
+  sensitivity_perturbation: 0.20   # ±20% weight perturbation for sensitivity analysis
+  sensitivity_runs: 100            # Number of perturbation runs
+
+# -- Phase 8: Mitigation --
+mitigation:
+  smote_neighbors: 5
+  pareto_models: 25                # Number of models to train for Pareto frontier
+  accuracy_loss_tolerance: 0.05    # Max acceptable accuracy drop from mitigation
+
+# -- Phase 9: Monitoring --
+monitoring:
+  drift_threshold: 0.15
+  check_interval_days: 30
+  alert_on_di_below: 0.80
