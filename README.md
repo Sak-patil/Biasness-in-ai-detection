@@ -1,207 +1,309 @@
 # ⚖️ Unbias AI Decision
 
-> **Ensuring Fairness and Detecting Bias in Automated Decisions**
+> **Detecting, explaining, and fixing hidden discrimination in AI systems — before they impact real people.**
 
-Computer programs now make life-changing decisions — who gets a job, a bank loan, or medical care. If these programs learn from flawed historical data, they repeat and amplify those exact same discriminatory mistakes at massive scale.
-
-**Unbias AI** is an automated 8-phase pipeline that detects, explains, and fixes algorithmic bias in any dataset or ML model — before it impacts real people.
-
----
-
-## 🚀 Live Demo
-
-```bash
-# 1. Install dependencies
-pip install -r requirements.txt
-
-# 2. Generate a demo hiring dataset (no Male/Female — uses race, age_group, education)
-python generate_demo_data.py
-
-# 3. Launch the interactive dashboard
-streamlit run dashboard.py
-```
-
-Open **http://localhost:8501** → Upload `demo_data.csv` → Select sensitive columns → Click **▶ Run Analysis**
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
+[![Fairlearn](https://img.shields.io/badge/Fairlearn-0.10+-6C3483)](https://fairlearn.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
 
-## 🖥️ Dashboard Features
+## 📌 Problem Statement
+
+AI systems now make life-changing decisions — who gets a job, a bank loan, college admission, or medical treatment. These systems learn from historical data, and if that data contains decades of human bias (conscious or unconscious), the AI absorbs and repeats those same discriminatory patterns **at massive scale** — thousands of decisions per day, with no one checking.
+
+**The core problems:**
+
+1. **Hidden Bias** — An AI can discriminate without anyone programming it to. It learns patterns from biased historical records (e.g., "fewer women were hired in the past") and applies them to future decisions.
+
+2. **Proxy Discrimination** — Removing a sensitive column like "gender" is not enough. Other features like zip code, university name, or first name can act as **secret shortcuts** to guess gender and smuggle discrimination back in.
+
+3. **Intersectional Blind Spots** — An AI can pass fairness tests for gender *and* race individually, but still systematically fail a specific combination like "older Black women" or "rural SC women." These blind spots are invisible unless you explicitly check every combination.
+
+4. **Label Corruption** — The "correct answers" the AI learns from (approved/rejected, hired/not-hired) may themselves be products of historical discrimination. If biased human managers made the original decisions, the AI learns to replicate their bias — and every fairness metric computed against those labels is meaningless.
+
+5. **No Accountability** — Most organisations deploy AI without any audit trail, fairness monitoring, or explanation of why the AI made a specific decision. When regulators or affected individuals ask questions, there are no answers.
+
+**Unbias AI Decision** is an automated 8-phase pipeline + interactive dashboard that solves all five problems. It detects bias, explains *why* it exists, fixes it with the least impact on accuracy, and monitors the system after deployment to catch new bias as it emerges.
+
+---
+
+## ✨ Features
+
+### 🔬 8-Phase Bias Detection & Mitigation Pipeline
+
+| Phase | What It Does |
+|-------|-------------|
+| **Phase 1 — Data Audit** | Checks who is in the data, finds missing data gaps, classifies why data is missing (MCAR/MAR/NMAR) |
+| **Phase 2 — Data Cleaning** | Fair encoding, normalisation, inconsistency removal, proxy variable detection using Cramér's V |
+| **Phase 3 — Label Audit** | Verifies if training labels themselves are biased using distribution analysis, counterfactual checks, and outcome comparison |
+| **Phase 4 — Bias Detection** | Chi-square test, Fisher's exact test, Cramér's V, point-biserial correlation, PCA/MCA, intersectional analysis, bootstrap confidence intervals |
+| **Phase 5 — Explainability** | SHAP-based root cause analysis — explains *which features* drive the bias and *how much* each contributes |
+| **Phase 6 — Fairness Metrics** | Demographic parity, equalized odds, disparate impact ratio (legal 4/5ths rule), per-group calibration, individual fairness |
+| **Phase 7 — Risk Scoring** | Composite 0–1 risk score with configurable weights, Pareto frontier analysis, sensitivity testing across 100 weight perturbations |
+| **Phase 8 — Mitigation** | Automatic strategy selection: SMOTE oversampling (low risk), sample reweighting + feature intervention (medium), ThresholdOptimizer + ExponentiatedGradient (high risk) |
+
+### 🖥️ Interactive Dashboard (Built for Everyone)
 
 | Feature | Description |
 |---------|-------------|
-| **CSV Upload** | Upload any dataset — no coding required |
-| **Auto-detection** | Automatically suggests sensitive columns (race, age, zip, religion, etc.) |
-| **Dynamic KPI cards** | Approval gap, Legal Safety (4/5ths), Proxy count — update per attribute |
-| **Approval Rate Chart** | Visual comparison across all groups |
-| **Intersectional Analysis** | Checks every combination (e.g. Black + 41-50 + HighSchool) |
-| **Proxy Variable Detection** | Finds hidden backdoors using Cramér's V |
-| **Risk Breakdown** | Shows which signal is driving the bias score |
-| **Plain-language Recommendations** | Actionable next steps for non-technical stakeholders |
+| **Plain-language explanations** | Every metric is explained in simple terms alongside the technical detail — no data science background needed |
+| **"What does this mean?" panels** | Each chart, table, and number has a green explanation box: *"The AI approves Group A at 72% but Group B at only 45% — that's a 27-point gap"* |
+| **"What should you do next?" callouts** | Every finding comes with clear, actionable next steps |
+| **CSV upload — any dataset** | Upload any CSV, pick any columns as sensitive attributes, and run the analysis instantly |
+| **Auto-detection** | Automatically suggests sensitive columns (race, age, gender, caste, zip code, religion, etc.) |
+| **Dynamic KPI cards** | Overall Risk Score, Approval Gap, Legal Safety, Hidden Shortcuts — all update when you switch attributes |
+| **Intersectional blind spot detection** | Checks every combination of sensitive attributes (e.g., age × race × education) |
+| **Proxy variable detection** | Finds features that act as secret shortcuts for discrimination |
+| **Risk breakdown chart** | Shows which component (statistical bias, approval gap, legal ratio, data imbalance) drives the overall risk |
+| **"How to Read This Dashboard" guide** | Collapsible step-by-step guide for first-time users |
+| **Detailed verdicts per group** | Each sensitive attribute gets a fairness report card with pass/fail results and simple explanations |
+
+### 🛡️ Post-Deployment Monitoring
+
+- Disparate impact trend tracking over time
+- Data distribution drift detection (benign vs. harmful)
+- Feedback loop detection
+- Automated alerting (email/Slack webhook)
+- Immutable audit log for regulatory compliance
 
 ---
 
-## 🔬 The 8-Phase Pipeline
+## 🛠️ Tech Stack
 
-```
-Phase 1 → Data Audit          Who is in the data? Missing data gaps? MCAR/MAR/NMAR?
-Phase 2 → Data Cleaning        Fair encoding, normalisation, proxy detection (Cramér's V)
-Phase 3 → Label Audit          Are the training labels themselves biased?
-Phase 4 → Bias Detection       Chi-square, Cramér's V, intersectional analysis, bootstrap CIs
-Phase 5 → Explainability       SHAP — WHY does the bias exist? Which features drive it?
-Phase 6 → Fairness Metrics     Demographic parity, equalized odds, disparate impact, calibration
-Phase 7 → Risk Scoring         Composite 0-1 risk score with Pareto frontier + sensitivity analysis
-Phase 8 → Mitigation           SMOTE / Reweighting / ExponentiatedGradient / ThresholdOptimizer
-```
+### Core Libraries
 
----
+| Purpose | Library | Role in Pipeline |
+|---------|---------|-----------------|
+| Data Manipulation | `pandas`, `numpy` | Used across all phases for data loading, transformation, and analysis |
+| Statistical Testing | `scipy.stats` | Chi-square test, Fisher's exact test, Cramér's V, point-biserial correlation (Phases 2, 4) |
+| Machine Learning | `scikit-learn` | StandardScaler, PCA, calibration curves, model training (Phases 2, 4, 6) |
+| Fairness Metrics & Mitigation | `fairlearn` | Demographic parity, equalized odds, disparate impact, ThresholdOptimizer, ExponentiatedGradient (Phases 6, 8) |
+| Oversampling | `imbalanced-learn` | SMOTE oversampling for underrepresented groups (Phase 8) |
+| Explainability | `shap` | SHAP values per feature per group — root cause analysis of bias (Phase 5) |
+| Causal Inference | `dowhy` | Counterfactual label checking — "would the outcome change if only the protected attribute changed?" (Phase 3) |
+| Categorical Analysis | `prince` | Multiple Correspondence Analysis (MCA) for categorical data (Phase 4) |
+| Missing Data Visualisation | `missingno` | Visualises patterns of missing data across groups (Phase 1) |
 
-## 📁 Project Structure
+### Dashboard & Visualisation
 
-```
-unbias ai/
-│
-├── dashboard.py              ← Streamlit interactive dashboard (main entry point)
-├── run_pipeline.py           ← Full 8-phase CLI pipeline runner
-├── generate_demo_data.py     ← Synthetic hiring dataset generator
-├── demo_data.csv             ← Pre-generated demo dataset (2,000 rows)
-├── config.yaml               ← All thresholds & weights (no hardcoding)
-├── requirements.txt          ← Full dependency list
-│
-└── pipeline/
-    ├── config.py             ← Config loader (dataclasses)
-    ├── phase1_data_audit.py  ← Representation, missingness, MCAR/MAR/NMAR
-    ├── phase2_data_cleaning.py ← Encoding, normalisation, proxy detection
-    ├── phase3_label_audit.py ← Label bias scoring, counterfactual check
-    ├── phase4_bias_detection.py ← Chi-square, Cramér's V, intersectional, bootstrap
-    ├── phase5_explainability.py ← SHAP per-group, divergence, root cause report
-    ├── phase6_fairness_metrics.py ← DP, EO, disparate impact, calibration
-    ├── phase7_risk_scoring.py ← Composite score, Pareto frontier, sensitivity
-    └── phase8_mitigation.py  ← SMOTE, reweighting, ExponentiatedGradient, ThresholdOptimizer
-```
+| Purpose | Library |
+|---------|---------|
+| Interactive Dashboard | `streamlit` |
+| Charts & Plots | `plotly` |
+| Static Plots | `matplotlib`, `seaborn` |
+
+### Configuration & Infrastructure
+
+| Purpose | Library |
+|---------|---------|
+| Configuration Management | `pyyaml`, `pydantic-settings` |
+| Production Monitoring | `evidently` |
+| Audit Logging | `sqlalchemy` |
 
 ---
 
-## 🎯 How to Verify Bias — 5-Step Checklist
+## 📥 Installation
 
-```
-Step 1  Check the badge         🟢 Green=OK  🟡 Yellow=Review  🔴 Red=Stop
+### Prerequisites
 
-Step 2  Read the KPI cards
-        ├── Approval Gap > 10%?         → Bias found
-        ├── Legal Safety < 0.80?        → Legally discriminatory (4/5ths rule)
-        └── Proxy variables > 0?        → Hidden backdoor detected
+- Python 3.10 or higher
+- pip (Python package manager)
+- Git
 
-Step 3  Switch attributes (top selector)
-        └── Each attribute shows its own gap, DI ratio, Cramér's V
+### Steps
 
-Step 4  Check Intersectional tab
-        └── Gap > 10% in any combination?  → Blind spot found
-
-Step 5  Read "What To Do" tab
-        └── Follow numbered recommendations
-```
-
----
-
-## 🗂️ Demo Dataset
-
-The included `demo_data.csv` is a **synthetic job hiring dataset** with intentionally embedded biases:
-
-| Attribute | Bias Embedded |
-|-----------|--------------|
-| `race` | White/Asian ~59% hired, Black/Hispanic ~36% hired |
-| `age_group` | 41-60 group hired ~18% less despite more experience |
-| `education` | Fair — higher education legitimately predicts hiring |
-| `college_tier` | **Proxy variable** — correlates with race (Cramér's V ≈ 0.75) |
-| `skill_score` | **Missing more** for Black/Hispanic (~20%) vs White (~4%) |
-
-No Male/Female. No gender. A completely different domain to demonstrate the system works on **any** dataset.
-
----
-
-## ⚙️ Configuration
-
-All thresholds are in `config.yaml` — change them without touching code:
-
-```yaml
-bias_detection:
-  cramers_v_threshold: 0.30    # Flag bias above this
-  min_subgroup_size: 30        # Minimum group size for reliable stats
-
-risk_scoring:
-  weights:
-    cramers_v: 0.25
-    dp_gap: 0.30
-    label_bias: 0.20
-    imbalance_ratio: 0.15
-    explainability_disparity: 0.10
-  thresholds:
-    low: 0.30
-    high: 0.60
-
-mitigation:
-  accuracy_loss_tolerance: 0.05   # Max acceptable accuracy drop after fixing bias
-```
-
----
-
-## 📦 Requirements
-
-```
-pandas, numpy, scipy, scikit-learn
-fairlearn          ← In-processing & post-processing mitigation
-shap               ← Explainability (root cause analysis)
-imbalanced-learn   ← SMOTE oversampling
-streamlit          ← Interactive dashboard
-plotly             ← Charts
-missingno          ← Missing data visualisation
-pyyaml             ← Config loading
-```
-
-Install all:
 ```bash
+# 1. Clone the repository
+git clone https://github.com/Sak-patil/Biasness-in-ai-detection.git
+cd Biasness-in-ai-detection
+
+# 2. (Recommended) Create a virtual environment
+python -m venv venv
+
+# On Windows:
+venv\Scripts\activate
+
+# On macOS/Linux:
+source venv/bin/activate
+
+# 3. Install all dependencies
 pip install -r requirements.txt
 ```
 
 ---
 
-## 📊 Key Metrics Explained
+## 🚀 Usage
 
-| Metric | What it means | Threshold |
-|--------|--------------|-----------|
-| **Cramér's V** | Statistical strength of association between a feature and a protected attribute | Flag if > 0.30 |
-| **Demographic Parity Gap** | Difference in approval rates between groups | Flag if > 10% |
-| **Disparate Impact Ratio** | Minority rate ÷ majority rate | Must be ≥ 0.80 (legal standard) |
-| **Label Bias Score** | How biased are the training labels themselves | Flag if > 0.30 |
-| **SHAP Divergence** | How differently a feature influences decisions across groups | Higher = bigger bias driver |
-| **Composite Risk Score** | Weighted combination of all signals (0–1) | Low < 0.30, Medium 0.30–0.60, High > 0.60 |
+### Option 1: Interactive Dashboard (Recommended)
+
+```bash
+# Generate the demo dataset (2,000 synthetic hiring records with embedded bias)
+python generate_demo_data.py
+
+# Launch the dashboard
+streamlit run dashboard.py
+```
+
+Open **http://localhost:8501** in your browser, then:
+
+1. **Upload your CSV** or click "Generate demo dataset" in the sidebar
+2. **Select sensitive attributes** — the system auto-detects gender, race, age, caste, zip code, etc.
+3. **Click "▶ Run Analysis"** — results appear instantly
+4. **Read the badge** — 🟢 Green (fair), 🟡 Yellow (review needed), 🔴 Red (do not deploy)
+5. **Explore the tabs** — each one explains findings in plain language with clear next steps
+
+### Option 2: Full CLI Pipeline
+
+```bash
+# Run the complete 8-phase pipeline from the command line
+python run_pipeline.py --config config.yaml --data demo_data.csv
+```
+
+This generates a detailed JSON report (`pipeline_report.json`) with all phase results.
+
+### How to Read the Dashboard — Quick Guide
+
+| Step | What to Check | Where to Look |
+|------|--------------|---------------|
+| 1 | Is the AI fair or unfair? | The colored badge at the top (🟢/🟡/🔴) |
+| 2 | How bad is the unfairness? | The 4 KPI cards below the badge |
+| 3 | Which groups are affected? | Use the attribute dropdown to switch between gender, race, age, etc. |
+| 4 | What's causing the bias? | Check the 5 tabs: Who Gets Approved? → Hidden Blind Spots → Secret Shortcuts → Where Is the Bias Coming From? → What Should You Do Next? |
+| 5 | What should I do? | The "What Should You Do Next?" tab gives numbered, specific actions |
 
 ---
 
-## ⚖️ Legal Standards
+## 📸 Screenshots
+![Screenshot 1](screenshots/image.png)
+![Screenshot 2](screenshots/image-1.png)
+![Screenshot 3](screenshots/image-2.png)
+![Screenshot 4](screenshots/image-3.png)
+![Screenshot 5](screenshots/image-4.png)
 
-This system checks against the **4/5ths (80%) rule** — the primary legal standard for employment discrimination in the US (EEOC Uniform Guidelines) and similar frameworks in the EU AI Act:
+2nd tab - Hidden Blind Spots
 
-> If the selection rate for any group is less than **4/5ths (80%)** of the group with the highest selection rate, this is considered evidence of adverse impact.
+![Screenshot 6](screenshots/image-5.png)
 
-A **Disparate Impact Ratio below 0.80** means the system is **presumptively discriminatory** under this standard.
+3rd tab - Secret Shortcuts
+
+![Screenshot 7](screenshots/image-6.png)
+
+4th tab - Where Is the Bias Coming From?
+
+![Screenshot 8](screenshots/image-7.png)
+![Screenshot 9](screenshots/image-8.png)
+
+5th tab - Steps to take ahead
+
+![Screenshot 10](screenshots/image-9.png)
+
 
 ---
 
-## 🤝 Contributing
+## 📁 Folder Structure
 
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/my-feature`
-3. Commit your changes: `git commit -m 'Add my feature'`
-4. Push to the branch: `git push origin feature/my-feature`
-5. Open a Pull Request
+```
+unbias-ai-decision/
+│
+├── dashboard.py                 ← Streamlit interactive dashboard (main entry point)
+│                                  - Upload any CSV, pick sensitive attributes, run analysis
+│                                  - Plain-language explanations alongside every metric
+│                                  - 5 tabs: Approval Rates, Blind Spots, Proxies, Risk, Actions
+│
+├── run_pipeline.py              ← Full 8-phase CLI pipeline runner
+│                                  - Runs all phases sequentially and outputs JSON report
+│
+├── generate_demo_data.py        ← Synthetic hiring dataset generator
+│                                  - Creates 2,000 rows with intentionally embedded biases
+│                                  - Biases in race, age_group; proxy in college_tier
+│
+├── demo_data.csv                ← Pre-generated demo dataset (2,000 rows)
+│                                  - Ready to use — upload directly to the dashboard
+│
+├── config.yaml                  ← All thresholds & weights (fully configurable)
+│                                  - Cramér's V threshold, legal 4/5ths rule, risk weights
+│                                  - No hardcoded values — change behavior without touching code
+│
+├── requirements.txt             ← Python dependency list (pip install -r requirements.txt)
+│
+├── pipeline_report.json         ← Output from the CLI pipeline run
+│
+├── pipeline/                    ← Core analysis modules (one file per phase)
+│   ├── __init__.py
+│   ├── config.py                ← Configuration loader using dataclasses
+│   ├── phase1_data_audit.py     ← Representation counts, missingness analysis, MCAR/MAR/NMAR
+│   ├── phase2_data_cleaning.py  ← Fair encoding, normalisation, proxy detection (Cramér's V)
+│   ├── phase3_label_audit.py    ← Label bias scoring, counterfactual checks
+│   ├── phase4_bias_detection.py ← Chi-square, Fisher's, Cramér's V, intersectional, bootstrap CIs
+│   ├── phase5_explainability.py ← SHAP per-group analysis, feature divergence, root cause report
+│   ├── phase6_fairness_metrics.py ← Demographic parity, equalized odds, disparate impact, calibration
+│   ├── phase7_risk_scoring.py   ← Composite score, Pareto frontier, sensitivity analysis
+│   └── phase8_mitigation.py     ← SMOTE, reweighting, ExponentiatedGradient, ThresholdOptimizer
+│
+├── README.md                    ← This file
+├── Unbias_AI_Decision_Complete.md ← Detailed system design document
+└── .gitignore
+```
+
+---
+
+## 🔮 Future Improvements
+
+### Short-Term (Next Release)
+
+- [ ] **Live monitoring dashboard** — Real-time disparate impact trend tracking with automated Slack/email alerts when the legal 4/5ths threshold is crossed
+- [ ] **PDF report export** — One-click download of the full bias audit report in PDF format, ready to share with compliance teams or regulators
+- [ ] **Confidence indicators on every metric** — Show high/medium/low confidence based on sample size and bootstrap CI width to prevent acting on unreliable statistics
+
+### Medium-Term
+
+- [ ] **Multi-language support** — Dashboard interface in Hindi, Spanish, and other languages for broader accessibility
+- [ ] **API endpoint** — REST API wrapper around the pipeline for integration into CI/CD pipelines — run bias checks automatically on every model retrain
+- [ ] **Database integration** — Connect directly to SQL/NoSQL databases instead of CSV uploads
+- [ ] **Batch processing** — Upload multiple datasets and compare bias scores across models or time periods
+
+### Long-Term (Research)
+
+- [ ] **Causal fairness analysis** — Move beyond statistical correlation to true causal inference — understand *why* the bias exists at a causal level using DAGs (Directed Acyclic Graphs)
+- [ ] **Federated bias detection** — Check for bias across distributed datasets without centralising sensitive data (privacy-preserving fairness)
+- [ ] **LLM bias auditing** — Extend the pipeline to audit large language models for bias in text generation, not just tabular classifiers
+- [ ] **Feedback loop simulation** — Simulate how the model's decisions today will affect the training data of tomorrow, predicting bias drift before it happens
 
 ---
 
 ## 📄 License
 
-MIT License — free to use, modify, and distribute.
+This project is licensed under the **MIT License** — free to use, modify, and distribute.
+
+```
+MIT License
+
+Copyright (c) 2025 Unbias AI Decision
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ---
 
-*Built as part of the Unbiased AI Decision project — ensuring fairness before systems impact real people.*
+<p align="center">
+  <b>⚖️ Unbias AI Decision</b><br>
+  <i>Making AI fairness understandable for everyone — because the people affected by AI decisions deserve to know if they're being treated fairly.</i>
+</p>
