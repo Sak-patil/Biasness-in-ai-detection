@@ -8,6 +8,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
+Demo Video Link-https://drive.google.com/file/d/1gBfLwsws52BKGl8kYFbTmuDkkuBXxUaL/view?usp=sharing
+Deplyed URL-https://biasness-in-ai-detection-j2j6v2fdmddhgat3mtwwsf.streamlit.app/
 
 ## 📌 Problem Statement
 
@@ -130,6 +132,8 @@ source venv/bin/activate
 
 # 3. Install all dependencies
 pip install -r requirements.txt
+
+#4.Run the streamlit run dashboard.py command
 ```
 
 ---
